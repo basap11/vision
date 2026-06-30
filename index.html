@@ -1,1 +1,430 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BASAP · Prozessdaten</title>
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --g900:#0b3320; --g800:#0f4228; --g700:#1a5c38; --g600:#237a4a;
+    --g400:#3aaa6e; --g100:#e6f4ed; --g50:#f2faf6;
+    --n900:#141414; --n700:#3a3a3a; --n400:#767676; --n100:#e8e8e8; --n50:#f5f5f3;
+    --white:#fff; --r-badge:#c0392b; --y-badge:#d68910;
+    --font:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;
+    --mono:'Courier New',Courier,monospace;
+    --nav-h:72px;
+  }
+  html{scroll-behavior:smooth}
+  body{font-family:var(--font);color:var(--n900);background:var(--n50);line-height:1.6}
+  button{font-family:inherit;cursor:pointer}
+  input,select,textarea{font-family:inherit;font-size:14px}
 
+  nav{position:sticky;top:0;z-index:100;background:var(--g900);height:var(--nav-h);
+    display:flex;align-items:center;padding:0 32px;gap:24px;border-bottom:2px solid var(--g800)}
+  .brand{display:flex;align-items:center;gap:12px}
+  .brand-mark{width:40px;height:40px;background:var(--g600);border-radius:3px;
+    display:grid;place-items:center;font-weight:800;font-size:20px;color:var(--white);letter-spacing:-0.04em}
+  .brand-txt{color:var(--white);font-weight:800;font-size:18px;letter-spacing:0.02em;line-height:1}
+  .brand-txt small{display:block;font-weight:500;font-size:10px;letter-spacing:0.16em;text-transform:uppercase;color:var(--g400);margin-top:2px}
+  .nav-spacer{flex:1}
+  .nav-tabs{display:flex;gap:4px}
+  .nav-tabs button{background:transparent;border:none;color:rgba(255,255,255,0.72);
+    padding:9px 16px;border-radius:3px;font-size:13.5px;font-weight:600;letter-spacing:0.02em;transition:background .2s,color .2s}
+  .nav-tabs button:hover{background:rgba(255,255,255,0.08);color:var(--white)}
+  .nav-tabs button.active{background:var(--g600);color:var(--white)}
+  .nav-auth{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:rgba(255,255,255,0.5)}
+  .auth-dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,0.3)}
+  .auth-dot.on{background:var(--g400)}
+
+  .topbar{background:var(--g900);padding:32px 32px 0}
+  .topbar-inner{max-width:1280px;margin:0 auto}
+  .eyebrow{font-size:11px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:var(--g400);margin-bottom:10px;display:inline-block;padding:4px 11px;border:1px solid var(--g700);border-radius:2px}
+  .topbar h1{font-size:clamp(24px,3vw,34px);font-weight:800;color:var(--white);line-height:1.1;letter-spacing:-0.02em}
+  .topbar p{font-size:15px;color:rgba(255,255,255,0.6);margin-top:8px;max-width:560px}
+  .topbar-stats{display:flex;gap:0;margin-top:24px;border-top:1px solid var(--g800)}
+  .tstat{padding:16px 28px 18px 0;border-right:1px solid var(--g800);margin-right:28px}
+  .tstat:last-child{border-right:none}
+  .tstat .v{font-size:24px;font-weight:800;color:var(--g400);line-height:1;letter-spacing:-0.02em}
+  .tstat .l{font-size:11px;color:rgba(255,255,255,0.45);text-transform:uppercase;letter-spacing:0.08em;margin-top:5px}
+
+  main{max-width:1280px;margin:0 auto;padding:28px 32px 80px}
+  .view{display:none;animation:fade .25s ease}
+  .view.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+  .card{background:var(--white);border:1px solid var(--n100);border-radius:4px;padding:24px;margin-bottom:18px}
+  .card-h{display:flex;align-items:center;gap:10px;margin-bottom:18px}
+  .card-code{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:0.14em;color:var(--g600);background:var(--g100);padding:4px 9px;border-radius:2px}
+  .card h2{font-size:16px;font-weight:800;color:var(--n900);letter-spacing:-0.01em}
+
+  .grid{display:grid;gap:18px}
+  .cols-2{grid-template-columns:1fr 1fr}
+  @media(max-width:900px){.cols-2{grid-template-columns:1fr}}
+
+  .field{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+  .field label{font-size:11px;font-weight:700;color:var(--g700);text-transform:uppercase;letter-spacing:0.08em}
+  .field input,.field select,.field textarea{padding:10px 12px;border:1px solid var(--n100);border-radius:3px;background:var(--white);transition:.15s;width:100%;color:var(--n900)}
+  .field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--g400);box-shadow:0 0 0 3px rgba(58,170,110,0.15)}
+  .row{display:flex;gap:14px;flex-wrap:wrap}
+  .row>.field{flex:1;min-width:130px}
+
+  .btn{background:var(--g600);color:var(--white);border:none;padding:11px 22px;border-radius:3px;font-weight:700;font-size:14px;letter-spacing:0.02em;transition:background .2s}
+  .btn:hover{background:var(--g400)}
+  .btn.ghost{background:transparent;color:var(--g700);border:1.5px solid var(--n100)}
+  .btn.ghost:hover{border-color:var(--g400);color:var(--g600);background:var(--g50)}
+  .btn.dark{background:var(--g800)}.btn.dark:hover{background:var(--g700)}
+  .btn.danger{background:var(--r-badge)}.btn.danger:hover{background:#a93226}
+  .btn.sm{padding:7px 13px;font-size:12.5px}
+  .btn:disabled{opacity:.45;cursor:not-allowed}
+
+  table{width:100%;border-collapse:collapse;font-size:13.5px}
+  th{text-align:left;padding:10px 11px;color:var(--n400);font-weight:700;border-bottom:2px solid var(--n100);text-transform:uppercase;font-size:10.5px;letter-spacing:0.08em}
+  td{padding:10px 11px;border-bottom:1px solid var(--n100)}
+  tr:hover td{background:var(--g50)}
+  .nowrap{white-space:nowrap}.right{text-align:right}.muted{color:var(--n400)}
+
+  .swatch{width:11px;height:11px;border-radius:2px;display:inline-block;vertical-align:middle}
+  .chip{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:4px 10px;border-radius:2px;background:var(--g100);color:var(--g700)}
+
+  .cont-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:2px;background:var(--n100);border:1px solid var(--n100);border-radius:4px;overflow:hidden}
+  .cont-card{background:var(--white);padding:24px;cursor:pointer;transition:background .2s;position:relative;border-left:3px solid var(--g700)}
+  .cont-card:hover{background:var(--g50)}
+  .cont-card .code{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:0.12em;color:var(--g600);background:var(--g100);padding:3px 9px;border-radius:2px;display:inline-block;margin-bottom:10px}
+  .cont-card h3{font-size:19px;font-weight:800;letter-spacing:-0.01em;margin-bottom:4px}
+  .cont-card .meta{font-size:13px;color:var(--n400);margin-top:8px}
+  .cont-card .tagcount{position:absolute;top:22px;right:22px;font-size:10.5px;font-weight:700;background:var(--g800);color:var(--white);padding:3px 10px;border-radius:2px;letter-spacing:0.06em}
+
+  .tag-pick{display:flex;flex-wrap:wrap;gap:8px;max-height:280px;overflow:auto;padding:2px}
+  .tag-pick label{display:flex;align-items:center;gap:8px;border:1px solid var(--n100);border-radius:3px;padding:8px 12px;font-size:13px;cursor:pointer;transition:.12s;user-select:none}
+  .tag-pick label:hover{border-color:var(--g400);background:var(--g50)}
+  .tag-pick label.on{background:var(--g600);color:var(--white);border-color:var(--g600);font-weight:600}
+  .tag-pick label.on .muted{color:rgba(255,255,255,0.7)}
+  .tag-pick input{accent-color:var(--g600)}
+
+  .chart-wrap{position:relative;width:100%;height:440px}
+  canvas{width:100%;height:100%}
+  .legend{display:flex;flex-wrap:wrap;gap:16px;margin-top:14px}
+  .legend span{display:flex;align-items:center;gap:7px;font-size:13px}
+  .empty{text-align:center;color:var(--n400);padding:48px 20px;font-size:14px}
+
+  .modal-bg{position:fixed;inset:0;background:rgba(11,51,32,0.6);display:none;align-items:center;justify-content:center;z-index:200;padding:20px}
+  .modal-bg.show{display:flex}
+  .modal{background:var(--white);border-radius:4px;width:100%;max-width:480px;overflow:hidden;border-top:3px solid var(--g600)}
+  .mhead{background:var(--g900);padding:18px 24px;color:var(--white);font-weight:800;font-size:16px;display:flex;justify-content:space-between;align-items:center;letter-spacing:-0.01em}
+  .mhead .x{background:none;border:none;color:rgba(255,255,255,0.6);font-size:24px;line-height:1}
+  .mhead .x:hover{color:var(--white)}
+  .mbody{padding:24px}
+  .mfoot{padding:16px 24px;border-top:1px solid var(--n100);display:flex;gap:10px;justify-content:flex-end}
+
+  #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(120px);background:var(--g900);color:var(--white);padding:13px 24px;border-radius:3px;z-index:300;transition:.3s;font-size:14px;font-weight:600;border-left:3px solid var(--g400);max-width:90vw}
+  #toast.show{transform:translateX(-50%) translateY(0)}
+  #toast.err{border-left-color:var(--r-badge)}
+
+  .config-warn{background:#fef3e2;border:1px solid #f0d29a;color:#7a5800;padding:14px 18px;border-radius:3px;margin-bottom:18px;font-size:13.5px}
+  .config-warn code{font-family:var(--mono);background:rgba(0,0,0,0.05);padding:1px 6px;border-radius:2px}
+
+  @media(max-width:720px){
+    nav{padding:0 16px;gap:12px}.brand-txt small{display:none}
+    .nav-tabs{overflow-x:auto}.nav-tabs button{white-space:nowrap;padding:9px 12px}
+    main{padding:20px 16px 60px}.topbar{padding:24px 16px 0}
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="brand">
+    <div class="brand-mark">B</div>
+    <div class="brand-txt">BASAP<small>Prozessdaten · D-01</small></div>
+  </div>
+  <div class="nav-spacer"></div>
+  <div class="nav-tabs">
+    <button data-view="explore" class="active">Kurven</button>
+    <button data-view="builder">Builder</button>
+    <button data-view="entry">Eintragen</button>
+    <button data-view="containers">Behälter</button>
+    <button data-view="admin">Admin</button>
+  </div>
+  <div class="nav-auth"><span class="auth-dot" id="authDot"></span><span id="authLabel">Gast</span></div>
+</nav>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <span class="eyebrow">Modul D-01 · Prozessdatenerfassung</span>
+    <h1 id="pageTitle">Kurven suchen &amp; anzeigen</h1>
+    <p id="pageDesc">Probeergebnisse erfassen, in Behältern und Messpunkten organisieren, Verläufe analysieren.</p>
+    <div class="topbar-stats">
+      <div class="tstat"><div class="v" id="statContainers">0</div><div class="l">Behälter</div></div>
+      <div class="tstat"><div class="v" id="statTags">0</div><div class="l">Messpunkte</div></div>
+      <div class="tstat"><div class="v" id="statCurves">0</div><div class="l">Kurven</div></div>
+    </div>
+  </div>
+</div>
+
+<main>
+  <div id="cfgWarn" class="config-warn" style="display:none">
+    ⚙️ Keine API verbunden – die App läuft mit lokalen Demodaten. Worker-URL unter <b>Admin → Verbindung</b> eintragen, um dauerhaft in Turso zu speichern.
+  </div>
+
+  <section class="view active" id="view-explore">
+    <div class="card">
+      <div class="card-h"><span class="card-code">SRCH</span><h2>Auswahl</h2></div>
+      <div class="row">
+        <div class="field" style="flex:2"><label>Suche · Behälter oder Messpunkt</label><input id="searchBox" placeholder="z.B. pH, Tank 1, Trübung …"></div>
+        <div class="field"><label>Gespeicherte Kurve</label><select id="savedCurveSel"><option value="">— wählen —</option></select></div>
+        <div class="field"><label>Von</label><input type="date" id="fromDate"></div>
+        <div class="field"><label>Bis</label><input type="date" id="toDate"></div>
+      </div>
+      <div class="field"><label>Messpunkte · mehrfach wählbar</label><div class="tag-pick" id="tagPickExplore"></div></div>
+      <div class="row" style="justify-content:flex-end">
+        <button class="btn ghost sm" id="clearSel">Auswahl leeren</button>
+        <button class="btn" id="drawBtn">Kurve anzeigen</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-h"><span class="card-code">PLOT</span><h2 id="chartTitle">Verlauf</h2></div>
+      <div class="chart-wrap"><canvas id="chart"></canvas></div>
+      <div class="legend" id="legend"></div>
+    </div>
+  </section>
+
+  <section class="view" id="view-builder">
+    <div class="grid cols-2">
+      <div class="card">
+        <div class="card-h"><span class="card-code">01</span><h2>Messpunkte wählen</h2></div>
+        <input id="builderSearch" placeholder="Filtern …" style="width:100%;padding:10px 12px;border:1px solid var(--n100);border-radius:3px;margin-bottom:14px">
+        <div class="tag-pick" id="tagPickBuilder" style="max-height:360px"></div>
+      </div>
+      <div class="card">
+        <div class="card-h"><span class="card-code">02</span><h2>Benennen &amp; speichern</h2></div>
+        <div class="field"><label>Name der Kurve</label><input id="curveName" placeholder="z.B. Tank 1 – Tagesgang"></div>
+        <div class="field"><label>Beschreibung</label><textarea id="curveDesc" rows="2"></textarea></div>
+        <div class="field"><label>Gewählte Messpunkte</label><div id="builderSelected" class="muted" style="font-size:13px">Noch nichts gewählt.</div></div>
+        <button class="btn" id="saveCurve">Kurve speichern</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-h"><span class="card-code">LIST</span><h2>Gespeicherte Kurven</h2></div>
+      <div id="curvesList"></div>
+    </div>
+  </section>
+
+  <section class="view" id="view-entry">
+    <div class="grid cols-2">
+      <div class="card">
+        <div class="card-h"><span class="card-code">NEW</span><h2>Neuer Messwert</h2></div>
+        <div class="field"><label>Behälter</label><select id="entryContainer"></select></div>
+        <div class="field"><label>Messpunkt</label><select id="entryTag"></select></div>
+        <div class="row">
+          <div class="field"><label>Datum &amp; Zeit</label><input type="datetime-local" id="entryTs"></div>
+          <div class="field"><label>Wert</label><input type="number" step="any" id="entryValue" placeholder="0.00"></div>
+        </div>
+        <div class="row">
+          <div class="field"><label>Probennummer</label><input id="entrySample" placeholder="P-2025-0815"></div>
+          <div class="field"><label>Erfasst von</label><input id="entryBy" placeholder="Kürzel"></div>
+        </div>
+        <div class="field"><label>Bemerkung</label><input id="entryNote"></div>
+        <button class="btn" id="saveReading">Messwert speichern</button>
+      </div>
+      <div class="card">
+        <div class="card-h"><span class="card-code">LOG</span><h2>Letzte Einträge</h2></div>
+        <div id="recentReadings"><p class="empty">Messpunkt wählen, um Einträge zu sehen.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="view" id="view-containers">
+    <div class="card" style="display:flex;justify-content:space-between;align-items:center;padding:18px 24px">
+      <div><b>Behälterverwaltung</b><div class="muted" style="font-size:13px">Tanks, Becken oder Linien anlegen und Messpunkte zuordnen.</div></div>
+      <button class="btn" id="addContainer">+ Behälter hinzufügen</button>
+    </div>
+    <div class="cont-grid" id="containerGrid"></div>
+  </section>
+
+  <section class="view" id="view-admin">
+    <div class="grid cols-2">
+      <div class="card">
+        <div class="card-h"><span class="card-code">CONN</span><h2>Verbindung</h2></div>
+        <div class="field"><label>Worker-API-URL</label><input id="apiUrlInput" placeholder="https://wki-prozessdaten.workers.dev"></div>
+        <button class="btn ghost" id="saveApiUrl">Speichern &amp; verbinden</button>
+      </div>
+      <div class="card">
+        <div class="card-h"><span class="card-code">AUTH</span><h2>Admin-Anmeldung</h2></div>
+        <div id="loginBox">
+          <div class="field"><label>Admin-Passwort</label><input type="password" id="adminPass" placeholder="••••••••"></div>
+          <button class="btn" id="loginBtn">Anmelden</button>
+        </div>
+        <div id="loggedInBox" style="display:none">
+          <p class="muted">Angemeldet als Administrator.</p>
+          <button class="btn ghost" id="logoutBtn">Abmelden</button>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-h"><span class="card-code">EDIT</span><h2>Messwerte bearbeiten / löschen</h2></div>
+      <div class="row">
+        <div class="field" style="flex:1"><label>Behälter</label><select id="adminContainer"></select></div>
+        <div class="field" style="flex:1"><label>Messpunkt</label><select id="adminTag"></select></div>
+        <div class="field" style="align-self:flex-end"><button class="btn dark" id="adminLoadReadings">Laden</button></div>
+      </div>
+      <div id="adminReadings"></div>
+    </div>
+    <div class="card">
+      <div class="card-h"><span class="card-code">AUDIT</span><h2>Änderungsprotokoll</h2></div>
+      <button class="btn ghost sm" id="loadAudit">Protokoll laden</button>
+      <div id="auditList" style="margin-top:12px"></div>
+    </div>
+  </section>
+</main>
+
+<div class="modal-bg" id="modalBg">
+  <div class="modal">
+    <div class="mhead"><span id="modalTitle">Titel</span><button class="x" id="modalX">×</button></div>
+    <div class="mbody" id="modalBody"></div>
+    <div class="mfoot" id="modalFoot"></div>
+  </div>
+</div>
+<div id="toast"></div>
+
+<script>
+const store={get:k=>{try{return localStorage.getItem(k)||''}catch(e){return ''}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}},sget:k=>{try{return sessionStorage.getItem(k)||''}catch(e){return ''}},sset:(k,v)=>{try{sessionStorage.setItem(k,v)}catch(e){}},sdel:k=>{try{sessionStorage.removeItem(k)}catch(e){}}};
+let API_BASE=store.get('pv_api')||"";
+let ADMIN_PASS=store.sget('pv_pass')||"";
+const $=(s,el=document)=>el.querySelector(s);
+const $$=(s,el=document)=>[...el.querySelectorAll(s)];
+const COLORS=['#237a4a','#d68910','#1a5c38','#2d6cdf','#b5179e','#3aaa6e','#c0392b','#16a085','#8e44ad','#0b3320'];
+let STATE={containers:[],tags:[],curves:[],selected:new Set(),builderSel:new Set()};
+const PAGES={explore:['Kurven suchen & anzeigen','Probeergebnisse als Verlauf darstellen und vergleichen.'],builder:['Eigene Kurve erstellen','Mehrere Messpunkte zu einer benannten Ansicht zusammenfassen.'],entry:['Probeergebnisse eintragen','Werte je Messpunkt mit Zeitstempel und Probennummer erfassen.'],containers:['Behälter','Tanks, Becken oder Linien anlegen und ihre Messpunkte verwalten.'],admin:['Administration','Verbindung, Anmeldung, Daten bearbeiten und Änderungsprotokoll.']};
+
+async function api(path,opts={}){
+  if(!API_BASE) return mockApi(path,opts);
+  const headers={'Content-Type':'application/json'};
+  if(ADMIN_PASS) headers['X-Admin-Pass']=ADMIN_PASS;
+  const res=await fetch(API_BASE.replace(/\/$/,'')+path,{...opts,headers});
+  const data=await res.json().catch(()=>({}));
+  if(!res.ok) throw new Error(data.error||('HTTP '+res.status));
+  return data;
+}
+function mockApi(path,opts={}){
+  const M=mockApi._db||(mockApi._db=buildMock());
+  const mm=path.match(/^([^?]*)(\?.*)?$/);const p=mm[1];const qs=new URLSearchParams(mm[2]||'');
+  const method=opts.method||'GET';
+  if(p==='/containers'&&method==='GET')return Promise.resolve(M.containers);
+  if(p==='/tags'&&method==='GET'){let t=M.tags;const cid=qs.get('container_id');const q=qs.get('q');if(cid)t=t.filter(x=>x.container_id==cid);if(q)t=t.filter(x=>(x.name+x.container_name).toLowerCase().includes(q.toLowerCase()));return Promise.resolve(t);}
+  if(p==='/readings'&&method==='GET'){const ids=(qs.get('tag_ids')||qs.get('tag_id')||'').split(',').filter(Boolean).map(Number);let r=M.readings.filter(x=>ids.includes(x.tag_id));const f=qs.get('from'),t=qs.get('to');if(f)r=r.filter(x=>x.ts>=f);if(t)r=r.filter(x=>x.ts<=t+'T23:59');return Promise.resolve(r);}
+  if(p==='/curves'&&method==='GET')return Promise.resolve(M.curves);
+  if(p==='/curves'&&method==='POST'){const b=JSON.parse(opts.body);b.id=Date.now();M.curves.unshift(b);return Promise.resolve({id:b.id});}
+  if(p.startsWith('/curves/')&&method==='DELETE'){M.curves=M.curves.filter(c=>c.id!=p.split('/')[2]);return Promise.resolve({ok:1});}
+  if(p==='/readings'&&method==='POST'){const b=JSON.parse(opts.body);b.id=Date.now();const tg=M.tags.find(t=>t.id==b.tag_id);b.tag_name=tg?.name;b.unit=tg?.unit;M.readings.push(b);return Promise.resolve({id:b.id});}
+  if(p.startsWith('/readings/')&&method==='DELETE'){M.readings=M.readings.filter(r=>r.id!=p.split('/')[2]);return Promise.resolve({ok:1});}
+  if(p.startsWith('/readings/')&&method==='PUT'){const b=JSON.parse(opts.body);const r=M.readings.find(x=>x.id==p.split('/')[2]);Object.assign(r,b);return Promise.resolve({ok:1});}
+  if(p==='/containers'&&method==='POST'){const b=JSON.parse(opts.body);b.id=Date.now();M.containers.push(b);return Promise.resolve({id:b.id});}
+  if(p.startsWith('/containers/')&&method==='DELETE'){const id=p.split('/')[2];M.containers=M.containers.filter(c=>c.id!=id);M.tags=M.tags.filter(t=>t.container_id!=id);return Promise.resolve({ok:1});}
+  if(p.startsWith('/containers/')&&method==='PUT'){const b=JSON.parse(opts.body);Object.assign(M.containers.find(c=>c.id==p.split('/')[2]),b);return Promise.resolve({ok:1});}
+  if(p==='/tags'&&method==='POST'){const b=JSON.parse(opts.body);b.id=Date.now();const c=M.containers.find(x=>x.id==b.container_id);b.container_name=c?.name;M.tags.push(b);return Promise.resolve({id:b.id});}
+  if(p.startsWith('/tags/')&&method==='DELETE'){const id=p.split('/')[2];M.tags=M.tags.filter(t=>t.id!=id);M.readings=M.readings.filter(r=>r.tag_id!=id);return Promise.resolve({ok:1});}
+  if(p.startsWith('/tags/')&&method==='PUT'){const b=JSON.parse(opts.body);Object.assign(M.tags.find(t=>t.id==p.split('/')[2]),b);return Promise.resolve({ok:1});}
+  if(p==='/auth'&&method==='POST')return Promise.resolve({ok:true});
+  if(p==='/audit')return Promise.resolve(M.audit||[]);
+  return Promise.resolve([]);
+}
+function buildMock(){
+  const containers=[{id:1,name:'Tank 1',code:'TK-01',location:'Halle A',description:'Rohwasser'},{id:2,name:'Becken Bio',code:'BB-02',location:'Außenanlage',description:'Belebungsbecken'}];
+  const tags=[{id:1,container_id:1,container_name:'Tank 1',name:'pH-Wert',unit:'pH',color:'#237a4a',min_warn:6.5,max_warn:8.5},{id:2,container_id:1,container_name:'Tank 1',name:'Temperatur',unit:'°C',color:'#d68910'},{id:3,container_id:1,container_name:'Tank 1',name:'Trübung',unit:'NTU',color:'#2d6cdf'},{id:4,container_id:2,container_name:'Becken Bio',name:'Sauerstoff',unit:'mg/L',color:'#16a085',min_warn:2},{id:5,container_id:2,container_name:'Becken Bio',name:'pH-Wert',unit:'pH',color:'#b5179e'}];
+  const readings=[];let rid=1;const now=new Date();
+  tags.forEach(t=>{let base=t.name==='pH-Wert'?7.2:t.name==='Temperatur'?18:t.name==='Trübung'?4:5;for(let d=14;d>=0;d--){const ts=new Date(now-d*86400000);base+=(Math.random()-.5)*(t.unit==='°C'?1.5:0.4);readings.push({id:rid++,tag_id:t.id,tag_name:t.name,unit:t.unit,ts:ts.toISOString().slice(0,16),value:+base.toFixed(2),sample_id:'P-'+ts.toISOString().slice(0,10)});}});
+  return {containers,tags,readings,curves:[{id:1,name:'Tank 1 – Wasserqualität',description:'pH + Trübung',tag_ids:[1,3]}],audit:[]};
+}
+let toastT;function toast(msg,err=false){const t=$('#toast');t.textContent=msg;t.className=err?'err show':'show';clearTimeout(toastT);toastT=setTimeout(()=>t.className=err?'err':'',2600);}
+
+$$('.nav-tabs button').forEach(b=>b.onclick=()=>{
+  $$('.nav-tabs button').forEach(x=>x.classList.remove('active'));$$('.view').forEach(v=>v.classList.remove('active'));
+  b.classList.add('active');$('#view-'+b.dataset.view).classList.add('active');
+  const[t,d]=PAGES[b.dataset.view];$('#pageTitle').textContent=t;$('#pageDesc').textContent=d;
+  if(b.dataset.view==='containers')renderContainers();if(b.dataset.view==='entry')fillEntrySelectors();if(b.dataset.view==='admin')fillAdminSelectors();if(b.dataset.view==='builder')renderBuilder();
+});
+
+async function loadAll(){
+  try{STATE.containers=await api('/containers');STATE.tags=await api('/tags');STATE.curves=await api('/curves');}catch(e){toast('Laden fehlgeschlagen: '+e.message,true);}
+  $('#statContainers').textContent=STATE.containers.length;$('#statTags').textContent=STATE.tags.length;$('#statCurves').textContent=STATE.curves.length;
+  renderTagPick('#tagPickExplore',STATE.selected);fillSavedCurves();fillEntrySelectors();
+}
+function renderTagPick(sel,set,filter=''){
+  const box=$(sel);box.innerHTML='';
+  const tags=STATE.tags.filter(t=>!filter||(t.name+' '+(t.container_name||'')).toLowerCase().includes(filter.toLowerCase()));
+  if(!tags.length){box.innerHTML='<span class="muted">Keine Messpunkte. Erst Behälter & Messpunkte anlegen.</span>';return;}
+  tags.forEach(t=>{const lab=document.createElement('label');lab.className=set.has(t.id)?'on':'';lab.innerHTML=`<input type="checkbox" ${set.has(t.id)?'checked':''}><span class="swatch" style="background:${t.color||'#237a4a'}"></span>${t.container_name||''} · <b>${t.name}</b> <span class="muted">${t.unit||''}</span>`;lab.querySelector('input').onchange=e=>{e.target.checked?set.add(t.id):set.delete(t.id);lab.classList.toggle('on',e.target.checked);if(sel==='#tagPickBuilder')updateBuilderSelected();};box.appendChild(lab);});
+}
+$('#searchBox').oninput=e=>renderTagPick('#tagPickExplore',STATE.selected,e.target.value);
+$('#clearSel').onclick=()=>{STATE.selected.clear();renderTagPick('#tagPickExplore',STATE.selected,$('#searchBox').value);};
+$('#drawBtn').onclick=drawChart;
+function fillSavedCurves(){const sel=$('#savedCurveSel');sel.innerHTML='<option value="">— wählen —</option>';STATE.curves.forEach(c=>{const o=document.createElement('option');o.value=c.id;o.textContent=c.name;sel.appendChild(o);});}
+$('#savedCurveSel').onchange=e=>{const c=STATE.curves.find(x=>x.id==e.target.value);if(!c)return;STATE.selected=new Set(c.tag_ids);renderTagPick('#tagPickExplore',STATE.selected,$('#searchBox').value);drawChart();};
+
+async function drawChart(){
+  const ids=[...STATE.selected];if(!ids.length){toast('Bitte mindestens einen Messpunkt wählen',true);return;}
+  const from=$('#fromDate').value,to=$('#toDate').value;let q='/readings?tag_ids='+ids.join(',');if(from)q+='&from='+from;if(to)q+='&to='+to;
+  let rows;try{rows=await api(q);}catch(e){toast(e.message,true);return;}
+  const series={};ids.forEach(id=>{const t=STATE.tags.find(x=>x.id==id);series[id]={tag:t,points:[]};});
+  rows.forEach(r=>{series[r.tag_id]?.points.push({x:new Date(r.ts).getTime(),y:r.value});});
+  renderChart(Object.values(series));
+}
+function renderChart(series){
+  const cv=$('#chart');const wrap=cv.parentElement;const dpr=window.devicePixelRatio||1;
+  const W=wrap.clientWidth,H=wrap.clientHeight;cv.width=W*dpr;cv.height=H*dpr;const ctx=cv.getContext('2d');ctx.scale(dpr,dpr);ctx.clearRect(0,0,W,H);
+  const all=series.flatMap(s=>s.points);const leg=$('#legend');leg.innerHTML='';
+  if(!all.length){ctx.fillStyle='#767676';ctx.font='14px sans-serif';ctx.textAlign='center';ctx.fillText('Keine Daten im gewählten Zeitraum.',W/2,H/2);return;}
+  const pad={l:54,r:18,t:18,b:38};const xs=all.map(p=>p.x),ys=all.map(p=>p.y);
+  let xMin=Math.min(...xs),xMax=Math.max(...xs),yMin=Math.min(...ys),yMax=Math.max(...ys);
+  if(xMin===xMax){xMin-=43200000;xMax+=43200000;}const yp=(yMax-yMin)*0.12||1;yMin-=yp;yMax+=yp;
+  const px=x=>pad.l+(x-xMin)/(xMax-xMin)*(W-pad.l-pad.r);const py=y=>H-pad.b-(y-yMin)/(yMax-yMin)*(H-pad.t-pad.b);
+  ctx.strokeStyle='#eef2ee';ctx.fillStyle='#767676';ctx.font='11px sans-serif';ctx.textAlign='right';
+  for(let i=0;i<=5;i++){const y=yMin+(yMax-yMin)*i/5;const yy=py(y);ctx.beginPath();ctx.moveTo(pad.l,yy);ctx.lineTo(W-pad.r,yy);ctx.stroke();ctx.fillText(y.toFixed(1),pad.l-8,yy+3);}
+  ctx.textAlign='center';for(let i=0;i<=4;i++){const x=xMin+(xMax-xMin)*i/4;const xx=px(x);const d=new Date(x);ctx.fillText((d.getMonth()+1)+'/'+d.getDate(),xx,H-pad.b+18);}
+  ctx.strokeStyle='#ccd6cf';ctx.beginPath();ctx.moveTo(pad.l,pad.t);ctx.lineTo(pad.l,H-pad.b);ctx.lineTo(W-pad.r,H-pad.b);ctx.stroke();
+  series.forEach((s,i)=>{if(!s.points.length)return;const c=s.tag?.color||COLORS[i%COLORS.length];s.points.sort((a,b)=>a.x-b.x);ctx.strokeStyle=c;ctx.lineWidth=2.2;ctx.beginPath();s.points.forEach((p,j)=>{const X=px(p.x),Y=py(p.y);j?ctx.lineTo(X,Y):ctx.moveTo(X,Y);});ctx.stroke();ctx.fillStyle=c;s.points.forEach(p=>{ctx.beginPath();ctx.arc(px(p.x),py(p.y),3,0,7);ctx.fill();});const sp=document.createElement('span');sp.innerHTML=`<span class="swatch" style="background:${c}"></span>${s.tag?.container_name||''} · ${s.tag?.name||''} ${s.tag?.unit?'('+s.tag.unit+')':''}`;leg.appendChild(sp);});
+  $('#chartTitle').textContent='Verlauf · '+series.map(s=>s.tag?.name).filter(Boolean).join(', ');
+}
+window.addEventListener('resize',()=>{if(STATE.selected.size)drawChart();});
+
+function renderBuilder(){renderTagPick('#tagPickBuilder',STATE.builderSel,$('#builderSearch').value);updateBuilderSelected();renderCurvesList();}
+$('#builderSearch').oninput=e=>renderTagPick('#tagPickBuilder',STATE.builderSel,e.target.value);
+function updateBuilderSelected(){const box=$('#builderSelected');if(!STATE.builderSel.size){box.innerHTML='Noch nichts gewählt.';box.className='muted';return;}box.className='';box.innerHTML=[...STATE.builderSel].map(id=>{const t=STATE.tags.find(x=>x.id==id);return `<span class="chip"><span class="swatch" style="background:${t?.color||'#237a4a'}"></span>${t?.name}</span>`;}).join(' ');}
+$('#saveCurve').onclick=async()=>{const name=$('#curveName').value.trim();if(!name){toast('Bitte Namen vergeben',true);return;}if(!STATE.builderSel.size){toast('Bitte Messpunkte wählen',true);return;}try{await api('/curves',{method:'POST',body:JSON.stringify({name,description:$('#curveDesc').value,tag_ids:[...STATE.builderSel]})});toast('Kurve gespeichert');$('#curveName').value='';$('#curveDesc').value='';STATE.builderSel.clear();STATE.curves=await api('/curves');renderBuilder();fillSavedCurves();$('#statCurves').textContent=STATE.curves.length;}catch(e){toast(e.message,true);}};
+function renderCurvesList(){const box=$('#curvesList');if(!STATE.curves.length){box.innerHTML='<p class="empty">Noch keine gespeicherten Kurven.</p>';return;}box.innerHTML='<table><thead><tr><th>Name</th><th>Messpunkte</th><th>Beschreibung</th><th></th></tr></thead><tbody>'+STATE.curves.map(c=>{const names=c.tag_ids.map(id=>STATE.tags.find(t=>t.id==id)?.name||('#'+id)).join(', ');return `<tr><td><b>${c.name}</b></td><td>${names}</td><td class="muted">${c.description||''}</td><td class="right nowrap"><button class="btn ghost sm" onclick="openCurve(${c.id})">Anzeigen</button> <button class="btn danger sm" onclick="delCurve(${c.id})">Löschen</button></td></tr>`;}).join('')+'</tbody></table>';}
+window.openCurve=id=>{const c=STATE.curves.find(x=>x.id==id);STATE.selected=new Set(c.tag_ids);$$('.nav-tabs button')[0].click();renderTagPick('#tagPickExplore',STATE.selected);drawChart();};
+window.delCurve=async id=>{if(!confirm('Kurve löschen?'))return;try{await api('/curves/'+id,{method:'DELETE'});STATE.curves=await api('/curves');renderBuilder();fillSavedCurves();$('#statCurves').textContent=STATE.curves.length;toast('Gelöscht');}catch(e){toast(e.message,true);}};
+
+function fillEntrySelectors(){const cs=$('#entryContainer');cs.innerHTML='';STATE.containers.forEach(c=>{const o=document.createElement('option');o.value=c.id;o.textContent=c.name+(c.code?' ('+c.code+')':'');cs.appendChild(o);});fillEntryTags();if(!$('#entryTs').value)$('#entryTs').value=new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,16);}
+$('#entryContainer')?.addEventListener('change',fillEntryTags);
+$('#entryTag')?.addEventListener('change',showRecent);
+function fillEntryTags(){const cid=$('#entryContainer').value;const ts=$('#entryTag');ts.innerHTML='';STATE.tags.filter(t=>t.container_id==cid).forEach(t=>{const o=document.createElement('option');o.value=t.id;o.textContent=t.name+(t.unit?' · '+t.unit:'');ts.appendChild(o);});showRecent();}
+async function showRecent(){const id=$('#entryTag').value;if(!id){$('#recentReadings').innerHTML='<p class="empty">Messpunkt wählen.</p>';return;}try{const rows=await api('/readings?tag_id='+id);rows.sort((a,b)=>b.ts.localeCompare(a.ts));const last=rows.slice(0,12);$('#recentReadings').innerHTML=last.length?'<table><thead><tr><th>Zeit</th><th class="right">Wert</th><th>Probe</th></tr></thead><tbody>'+last.map(r=>`<tr><td class="nowrap">${r.ts.replace('T',' ')}</td><td class="right"><b>${r.value}</b> ${r.unit||''}</td><td class="muted">${r.sample_id||''}</td></tr>`).join('')+'</tbody></table>':'<p class="empty">Noch keine Werte.</p>';}catch(e){$('#recentReadings').innerHTML='<p class="empty">'+e.message+'</p>';}}
+$('#saveReading').onclick=async()=>{const tag_id=$('#entryTag').value,ts=$('#entryTs').value,value=$('#entryValue').value;if(!tag_id||!ts||value===''){toast('Messpunkt, Zeit und Wert nötig',true);return;}if(!ADMIN_PASS&&API_BASE){toast('Zum Schreiben bitte unter Admin anmelden',true);return;}try{await api('/readings',{method:'POST',body:JSON.stringify({tag_id:+tag_id,ts,value:+value,sample_id:$('#entrySample').value,note:$('#entryNote').value,created_by:$('#entryBy').value})});toast('Messwert gespeichert');$('#entryValue').value='';$('#entrySample').value='';$('#entryNote').value='';showRecent();}catch(e){toast(e.message,true);}};
+
+function renderContainers(){const g=$('#containerGrid');if(!STATE.containers.length){g.innerHTML='<div style="background:#fff;padding:40px"><p class="empty">Noch keine Behälter. Lege den ersten an.</p></div>';return;}g.innerHTML=STATE.containers.map(c=>{const n=STATE.tags.filter(t=>t.container_id==c.id).length;return `<div class="cont-card" onclick="openContainer(${c.id})"><span class="tagcount">${n} Messp.</span><div class="code">${c.code||'—'}</div><h3>${c.name}</h3><div class="meta">${c.location||''}${c.description?' · '+c.description:''}</div></div>`;}).join('');}
+$('#addContainer').onclick=()=>containerModal();
+window.openContainer=id=>{const c=STATE.containers.find(x=>x.id==id);const tags=STATE.tags.filter(t=>t.container_id==id);modal('Behälter · '+c.name,`<div class="field"><label>Code</label><div>${c.code||'—'}</div></div><div class="field"><label>Standort</label><div>${c.location||'—'}</div></div><div class="field"><label>Messpunkte (${tags.length})</label><div>${tags.map(t=>`<span class="chip"><span class="swatch" style="background:${t.color||'#237a4a'}"></span>${t.name} ${t.unit||''}</span>`).join(' ')||'<span class="muted">keine</span>'}</div></div>`,[{label:'+ Messpunkt',cls:'',fn:()=>tagModal(id)},{label:'Bearbeiten',cls:'ghost',fn:()=>containerModal(c)},{label:'Löschen',cls:'danger',fn:async()=>{if(confirm('Behälter und alle Messpunkte/Werte löschen?')){await api('/containers/'+id,{method:'DELETE'});await loadAll();renderContainers();closeModal();toast('Gelöscht');}}}]);};
+function containerModal(c=null){modal(c?'Behälter bearbeiten':'Behälter hinzufügen',`<div class="field"><label>Name *</label><input id="m_name" value="${c?.name||''}"></div><div class="row"><div class="field"><label>Code</label><input id="m_code" value="${c?.code||''}" placeholder="TK-01"></div><div class="field"><label>Standort</label><input id="m_loc" value="${c?.location||''}"></div></div><div class="field"><label>Beschreibung</label><input id="m_desc" value="${c?.description||''}"></div>`,[{label:'Abbrechen',cls:'ghost',fn:closeModal},{label:'Speichern',cls:'',fn:async()=>{const b={name:$('#m_name').value,code:$('#m_code').value,location:$('#m_loc').value,description:$('#m_desc').value};if(!b.name){toast('Name nötig',true);return;}try{await api(c?'/containers/'+c.id:'/containers',{method:c?'PUT':'POST',body:JSON.stringify(b)});await loadAll();renderContainers();closeModal();toast('Gespeichert');}catch(e){toast(e.message,true);}}}]);}
+function tagModal(containerId,t=null){modal(t?'Messpunkt bearbeiten':'Messpunkt hinzufügen',`<div class="field"><label>Name *</label><input id="t_name" value="${t?.name||''}" placeholder="pH-Wert"></div><div class="row"><div class="field"><label>Einheit</label><input id="t_unit" value="${t?.unit||''}" placeholder="pH"></div><div class="field"><label>Farbe</label><input type="color" id="t_color" value="${t?.color||'#237a4a'}"></div></div><div class="row"><div class="field"><label>Warn min</label><input type="number" step="any" id="t_min" value="${t?.min_warn??''}"></div><div class="field"><label>Warn max</label><input type="number" step="any" id="t_max" value="${t?.max_warn??''}"></div></div>`,[{label:'Abbrechen',cls:'ghost',fn:closeModal},{label:'Speichern',cls:'',fn:async()=>{const b={container_id:containerId,name:$('#t_name').value,unit:$('#t_unit').value,color:$('#t_color').value,min_warn:$('#t_min').value!==''?+$('#t_min').value:null,max_warn:$('#t_max').value!==''?+$('#t_max').value:null};if(!b.name){toast('Name nötig',true);return;}try{await api(t?'/tags/'+t.id:'/tags',{method:t?'PUT':'POST',body:JSON.stringify(b)});await loadAll();renderContainers();closeModal();toast('Gespeichert');}catch(e){toast(e.message,true);}}}]);}
+
+function fillAdminSelectors(){$('#apiUrlInput').value=API_BASE;const cs=$('#adminContainer');cs.innerHTML='';STATE.containers.forEach(c=>{const o=document.createElement('option');o.value=c.id;o.textContent=c.name;cs.appendChild(o);});fillAdminTags();$('#loginBox').style.display=ADMIN_PASS?'none':'block';$('#loggedInBox').style.display=ADMIN_PASS?'block':'none';}
+$('#adminContainer')?.addEventListener('change',fillAdminTags);
+function fillAdminTags(){const cid=$('#adminContainer').value;const ts=$('#adminTag');ts.innerHTML='';STATE.tags.filter(t=>t.container_id==cid).forEach(t=>{const o=document.createElement('option');o.value=t.id;o.textContent=t.name;ts.appendChild(o);});}
+$('#saveApiUrl').onclick=()=>{API_BASE=$('#apiUrlInput').value.trim();store.set('pv_api',API_BASE);toast('Gespeichert');checkCfg();loadAll();};
+$('#loginBtn').onclick=async()=>{const p=$('#adminPass').value;try{await api('/auth',{method:'POST',body:JSON.stringify({pass:p})});ADMIN_PASS=p;store.sset('pv_pass',p);$('#authDot').classList.add('on');$('#authLabel').textContent='Admin';fillAdminSelectors();toast('Angemeldet');}catch(e){toast('Anmeldung fehlgeschlagen',true);}};
+$('#logoutBtn').onclick=()=>{ADMIN_PASS='';store.sdel('pv_pass');$('#authDot').classList.remove('on');$('#authLabel').textContent='Gast';fillAdminSelectors();toast('Abgemeldet');};
+$('#adminLoadReadings').onclick=async()=>{const id=$('#adminTag').value;if(!id)return;try{const rows=await api('/readings?tag_id='+id);rows.sort((a,b)=>b.ts.localeCompare(a.ts));$('#adminReadings').innerHTML=rows.length?'<table><thead><tr><th>Zeit</th><th class="right">Wert</th><th>Probe</th><th>Bemerkung</th><th></th></tr></thead><tbody>'+rows.map(r=>`<tr><td class="nowrap">${r.ts.replace('T',' ')}</td><td class="right"><b>${r.value}</b></td><td>${r.sample_id||''}</td><td class="muted">${r.note||''}</td><td class="right nowrap"><button class="btn ghost sm" onclick='editReading(${JSON.stringify(r).replace(/'/g,"&#39;")})'>✎</button> <button class="btn danger sm" onclick="delReading(${r.id})">🗑</button></td></tr>`).join('')+'</tbody></table>':'<p class="empty">Keine Werte.</p>';}catch(e){toast(e.message,true);}};
+window.delReading=async id=>{if(!confirm('Messwert löschen?'))return;try{await api('/readings/'+id,{method:'DELETE'});$('#adminLoadReadings').click();toast('Gelöscht');}catch(e){toast(e.message,true);}};
+window.editReading=r=>{modal('Messwert bearbeiten',`<div class="row"><div class="field"><label>Zeit</label><input type="datetime-local" id="e_ts" value="${r.ts}"></div><div class="field"><label>Wert</label><input type="number" step="any" id="e_val" value="${r.value}"></div></div><div class="field"><label>Probennummer</label><input id="e_sample" value="${r.sample_id||''}"></div><div class="field"><label>Bemerkung</label><input id="e_note" value="${r.note||''}"></div>`,[{label:'Abbrechen',cls:'ghost',fn:closeModal},{label:'Speichern',cls:'',fn:async()=>{try{await api('/readings/'+r.id,{method:'PUT',body:JSON.stringify({ts:$('#e_ts').value,value:+$('#e_val').value,sample_id:$('#e_sample').value,note:$('#e_note').value})});closeModal();$('#adminLoadReadings').click();toast('Gespeichert');}catch(e){toast(e.message,true);}}}]);};
+$('#loadAudit').onclick=async()=>{try{const rows=await api('/audit');$('#auditList').innerHTML=rows.length?'<table><thead><tr><th>Zeit</th><th>Aktion</th><th>Akteur</th><th>Ziel</th></tr></thead><tbody>'+rows.map(a=>`<tr><td class="nowrap muted">${(a.ts||'').replace('T',' ')}</td><td><b>${a.action}</b></td><td>${a.actor||''}</td><td class="muted">${a.target||''}</td></tr>`).join('')+'</tbody></table>':'<p class="empty">Kein Protokoll (oder lokaler Demo-Modus).</p>';}catch(e){toast(e.message,true);}};
+
+function modal(title,bodyHtml,buttons=[]){$('#modalTitle').textContent=title;$('#modalBody').innerHTML=bodyHtml;const f=$('#modalFoot');f.innerHTML='';buttons.forEach(b=>{const btn=document.createElement('button');btn.className='btn '+(b.cls||'');btn.textContent=b.label;btn.onclick=b.fn;f.appendChild(btn);});$('#modalBg').classList.add('show');}
+function closeModal(){$('#modalBg').classList.remove('show');}
+$('#modalX').onclick=closeModal;$('#modalBg').onclick=e=>{if(e.target===$('#modalBg'))closeModal();};
+function checkCfg(){$('#cfgWarn').style.display=API_BASE?'none':'block';}
+(function init(){checkCfg();if(ADMIN_PASS){$('#authDot').classList.add('on');$('#authLabel').textContent='Admin';}const t=new Date();$('#toDate').value=t.toISOString().slice(0,10);$('#fromDate').value=new Date(t-14*86400000).toISOString().slice(0,10);loadAll().then(drawChart);})();
+</script>
+</body>
+</html>
